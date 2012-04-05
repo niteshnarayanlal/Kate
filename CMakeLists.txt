@@ -9,6 +9,14 @@ find_package(KDE4 REQUIRED)
 include (KDE4Defaults)
 include (MacroLibrary)
 include (CheckFunctionExists)
+#find_package(QZeitgeist)
+#including QZeitgeist
+
+macro_optional_find_package(QZeitgeist 0.8)
+macro_log_feature(QZEITGEIST_FOUND "QZeitgeist" "Qt bindings for QZeitgeist" "http://projects.kde.org/kdesupport/libqzeitgeist/" FALSE "0.8")
+if (QZEITGEIST_FOUND)
+    include_directories(${QZEITGEIST_INCLUDE_DIR})
+endif(QZEITGEIST_FOUND)
 
 # no in source builds
 macro_ensure_out_of_source_build("kate requires an out of source build. Please create a separate build directory and run 'cmake path_to_kate [options]' there.")

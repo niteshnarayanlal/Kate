@@ -27,12 +27,16 @@
 
 #include <KTextEditor/View>
 #include <KTextEditor/Document>
-
-#include <QPointer>
 #include <QList>
+#include <QPointer>
 #include <QSplitter>
 #include <QStackedWidget>
 
+#include <QZeitgeist/DataModel/Event>
+#include <QZeitgeist/Interpretation>
+#include <QZeitgeist/Log>
+#include <QZeitgeist/Manifestation>
+#include <QZeitgeist/QZeitgeist>
 class KateDocumentInfo;
 
 class KConfigGroup;
@@ -74,6 +78,12 @@ class KateViewManager : public QSplitter
                                     bool activate = true,
                                     bool isTempFile = false,
                                     const KateDocumentInfo& docInfo = KateDocumentInfo());
+
+    void sendToZeitgeist(const QString &event_interpretation,
+                                     const QString &event_manifestation,
+                                     const QString &event_actor,
+                                     const QDateTime &subject_timestamp,
+                                     const QUrl &subject_uri);
 
     KTextEditor::View *openUrlWithView (const KUrl &url, const QString& encoding);
 

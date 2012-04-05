@@ -51,7 +51,7 @@
 #include <KStandardDirs>
 #include <KGlobalSettings>
 #include <kstandardshortcut.h>
-
+#include<QZeitgeist/DataModel/DataSource>
 #include <QApplication>
 #include <QObject>
 #include <QFileInfo>
@@ -210,7 +210,60 @@ void KateViewManager::setupActions ()
   connect(m_docNameToggle, SIGNAL(toggled(bool)), 
           this, SIGNAL(documentNameItemVisibilityChanged(bool)));
 }
+void KateViewManager::sendToZeitgeist(const QString &event_interpretation,
+                                      const QString &event_manifestation,
+                                      const QString &event_actor,
+                                      const QDateTime &subject_timestamp,
+                                      const QUrl &subject_uri)
+{
 
+    QZeitgeist::Log * log = new  QZeitgeist::Log;
+    QZeitgeist::DataModel::Subject subject;
+    QString url = subject_uri.toString();
+    QString path = url.left(url.lastIndexOf(QLatin1Char('/')));
+    subject.setUri(url);
+    subject.setOrigin(path);
+    QZeitgeist::DataModel::SubjectList subjects;
+    subjects << subject;
+    QZeitgeist::DataModel::Event event;
+    event.setTimestamp(subject_timestamp);
+    event.setInterpretation(event_interpretation);
+    event.setManifestation(event_manifestation);
+    event.setActor(event_actor);
+    event.setSubjects(subjects);
+    qDebug()<<"THIS ARE THE DETAILS TO BE INSERTED"<<event_interpretation<<event_manifestation<<event_actor<<subject_timestamp<<subject_uri;
+    QZeitgeist::DataModel::EventList events;
+    events << event;
+    QZeitgeist::DataModel::EventIdList list;
+    list=log->insertEvents(events);
+    qDebug()<<"IDLIST"<<list;
+    qDebug()<<"PAST ACTIVITIES";
+    QZeitgeist::DataModel::TimeRange timerange;
+    QZeitgeist::DataModel::TimeRange  time=timerange.always();
+    QZeitgeist::DataModel::EventList eventlist;
+    QZeitgeist::Log *log1=new QZeitgeist::Log();
+    if(events.size()>0)
+    eventlist=log1->findEvents(time,events,QZeitgeist::Log::Any,5,QZeitgeist::Log::MostRecentEvents);
+    QZeitgeist::DataModel::DataSource ob;
+    QString descp=ob.description();
+    bool enable=ob.enabled();
+    qDebug()<<descp<<enable;
+    qDebug()<<"Size :"<<eventlist.size();
+    foreach(QZeitgeist::DataModel::Event tempevent,eventlist)
+    {
+          qDebug()<<"Manifestation :"<<tempevent.manifestation();
+          qDebug()<<"Interpretation:"<<tempevent.interpretation();
+          qDebug()<<"Actor:"<<tempevent.actor();
+          qDebug()<<"TimeStamp:"<<tempevent.timestamp();
+          foreach(QZeitgeist::DataModel::Subject subjectlist,tempevent.subjects())
+          {
+              qDebug()<<subjectlist.mimeType();
+              qDebug()<<subjectlist.uri();
+              qDebug()<<subjectlist.origin();
+          }
+
+      }
+}
 void KateViewManager::updateViewSpaceActions ()
 {
   m_closeView->setEnabled (viewSpaceCount() > 1);
@@ -226,7 +279,9 @@ void KateViewManager::setViewActivationBlocked (bool block)
 void KateViewManager::slotDocumentNew ()
 {
   createView ();
+
 }
+
 
 void KateViewManager::slotDocumentOpen ()
 {
@@ -234,9 +289,10 @@ void KateViewManager::slotDocumentOpen ()
 
   if (cv)
   {
+      QString u=cv->document()->url().url();
     KEncodingFileDialog::Result r = KEncodingFileDialog::getOpenUrlsAndEncoding(
                                       KateDocManager::self()->editor()->defaultEncoding(),
-                                      cv->document()->url().url(),
+                                      u,
                                       QString(), m_mainWindow, i18n("Open File"));
 
     KateDocumentInfo docInfo;
@@ -254,7 +310,8 @@ void KateViewManager::slotDocumentOpen ()
 void KateViewManager::slotDocumentClose(KTextEditor::Document *document) {
 // prevent close document if only one view alive and the document of
   // it is not modified and empty !!!
-  if ( (KateDocManager::self()->documents() == 1)
+    QString u=document->url().url();
+    if ( (KateDocManager::self()->documents() == 1)
        && !document->isModified()
        && document->url().isEmpty()
        && document->documentEnd() == KTextEditor::Cursor::start() )
@@ -263,6 +320,11 @@ void KateViewManager::slotDocumentClose(KTextEditor::Document *document) {
     return;
   }
 
+  QString name="Kate";
+ QString  eventInterpretation = QZeitgeist::Interpretation::Event::ZGLeaveEvent;
+  sendToZeitgeist(eventInterpretation,QZeitgeist::Manifestation::Event::ZGUserActivity,
+                QLatin1Literal("app://" ) % name % QLatin1Literal(".desktop"),
+                QDateTime::currentDateTime(),u);
   // close document
   KateDocManager::self()->closeDocument (document);
 }
@@ -291,6 +353,11 @@ KTextEditor::Document *KateViewManager::openUrl (const KUrl &url,
 
   if (activate)
     activateView( doc );
+  QString name="Kate";
+  QString eventInterpretation = QZeitgeist::Interpretation::Event::ZGAccessEvent;
+  sendToZeitgeist(eventInterpretation,QZeitgeist::Manifestation::Event::ZGUserActivity,
+                "application://"% name % ".desktop",
+                QDateTime::currentDateTime(),url);
 
   return doc;
 }
@@ -312,6 +379,8 @@ KTextEditor::View *KateViewManager::openUrlWithView (const KUrl &url, const QStr
 
 void KateViewManager::openUrl (const KUrl &url)
 {
+
+
   openUrl (url, QString());
 }
 

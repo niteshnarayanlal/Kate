@@ -1,0 +1,1 @@
+I have modified kateviewmanager.h and kateviewmanager.cpp to log the user activities using QZeitgeist and to show there past activities in konsole . 

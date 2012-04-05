@@ -156,7 +156,6 @@ class KateMainWindow : public KateMDI::MainWindow, virtual public KParts::PartBa
      * Setup actions which pointers are needed already in setupMainWindow
      */
     void setupImportantActions ();
-
     void setupMainWindow();
     void setupActions();
     bool queryClose();
@@ -259,7 +258,7 @@ class KateMainWindow : public KateMDI::MainWindow, virtual public KParts::PartBa
     Kate::MainWindow *m_mainWindow;
 
     bool modNotification;
-
+    
     // management items
     KateViewManager *m_viewManager;
 

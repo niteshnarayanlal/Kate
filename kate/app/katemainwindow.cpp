@@ -66,15 +66,20 @@
 #include <QDragEnterEvent>
 #include <QEvent>
 #include <QDropEvent>
-#include <QList>
 #include <QDesktopWidget>
-
 #include <kio/job.h>
 #include <KIO/ListJob>
 #include <KFileItem>
 
 #include <assert.h>
 #include <unistd.h>
+#include<QDebug>
+#include <QZeitgeist/DataModel/Event>
+#include <QZeitgeist/Interpretation>
+#include <QZeitgeist/Log>
+#include <QZeitgeist/Manifestation>
+#include <QZeitgeist/QZeitgeist>
+#include<QZeitgeist/DataModel/Subject>
 //END
 
 uint KateMainWindow::uniqueID = 1;
@@ -83,6 +88,7 @@ KateMwModOnHdDialog *KateMainWindow::s_modOnHdDialog=0;
 KateContainerStackedLayout::KateContainerStackedLayout(QWidget* parent)
   : QStackedLayout(parent)
 {}
+
 
 QSize KateContainerStackedLayout::sizeHint() const
 {
@@ -341,7 +347,6 @@ void KateMainWindow::setupActions()
   connect(m_viewManager, SIGNAL(viewChanged()), this, SLOT(slotUpdateOpenWith()));
   connect(m_viewManager, SIGNAL(viewChanged()), this, SLOT(slotUpdateBottomViewBar()));
   connect(m_viewManager, SIGNAL(viewChanged()), this, SLOT(slotUpdateTopViewBar()));
-  
   slotWindowActivated ();
 
   // session actions
@@ -394,13 +399,13 @@ void KateMainWindow::slotDocumentCloseOther(KTextEditor::Document *document)
   if (queryClose_internal(document))
     KateDocManager::self()->closeOtherDocuments(document);
 }
-
 void KateMainWindow::slotDocumentCloseSelected(const QList<KTextEditor::Document*> &docList)
 {
   foreach(KTextEditor::Document *doc, docList)
   {
     if(queryClose_internal(doc))
       KateDocManager::self()->closeDocument(doc);
+
   }
 }
 
@@ -488,12 +493,10 @@ void KateMainWindow::slotFileQuit()
 {
   KateApp::self()->shutdownKate (this);
 }
-
 void KateMainWindow::slotFileClose()
 {
   m_viewManager->slotDocumentClose();
 }
-
 void KateMainWindow::slotOpenDocument(KUrl url)
 {
   m_viewManager->openUrl(url,
